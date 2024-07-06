@@ -1,4 +1,7 @@
-LOG:
+## LOG
+
+### Command
+```bash
 
 node create-lit-wallet.js
 
@@ -32,3 +35,5 @@ Error creating Lit Wallet: errConstructorFunc {
   ],
   requestId: '8e1fdb9a16108'
 }
+
+```
