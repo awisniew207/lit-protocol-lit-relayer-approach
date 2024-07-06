@@ -1,6 +1,15 @@
-## LOG
+## Execute
+(node -v: v20.13.1)
 
-### Command
+1 - clone
+2 - yarn install
+3 - node create-lit-wallet.js
+
+* No need to have .env file
+* Lit relayer key is a demo one, but works. I did test with a real one with same result.
+
+
+## LOG
 ```bash
 
 node create-lit-wallet.js
