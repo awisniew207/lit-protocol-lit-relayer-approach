@@ -13,7 +13,7 @@ const {
     generateAuthSig,
 } = require('@lit-protocol/auth-helpers');
 
-const LIT_NETWORK = process.env.NEXT_PUBLIC_LIT_NETWORK || 'manzano';
+const LIT_NETWORK = process.env.NEXT_PUBLIC_LIT_NETWORK || 'datil-dev';
 const RELAYER_LIT_API =
     process.env.NEXT_PUBLIC_RELAYER_LIT_API ||
     'y5bd3lpp-v3oy-8xrm-21sp-not-a-valid-one-but-works';
@@ -32,12 +32,14 @@ async function createLitWallet() {
         ethersSigner,
         litNodeClient,
     );
+    console.log("AuthMethod:", authMethod);
     const newPKP = await mintPKP(provider, authMethod);
     const pkpSessionSigs = await createPKPSessionSigs(
         litNodeClient,
         newPKP,
         authMethod,
     );
+    console.log("SessionSigs:", pkpSessionSigs);
     await litNodeClient.disconnect();
     return newPKP;
 }
@@ -89,14 +91,11 @@ function initializeProvider(litAuthClient) {
         origin: ORIGIN,
     });
 }
-
 async function authenticateProvider(provider, ethersSigner, litNodeClient) {
-    const signMessage = async ({ expiration, uri }) => {
+    const signMessage = async () => { // needs {expiration, uri}
         const toSign = await createSiweMessageWithRecaps({
             walletAddress: ethersSigner.address,
             nonce: await litNodeClient.getLatestBlockhash(),
-            uri,
-            expiration,
             resources: [
                 {
                     resource: new LitPKPResource('*'),
@@ -110,13 +109,18 @@ async function authenticateProvider(provider, ethersSigner, litNodeClient) {
             litNodeClient,
             domain: DOMAIN,
         });
-        return generateAuthSig({ signer: ethersSigner, toSign });
+        const authSig = await generateAuthSig({ signer: ethersSigner, toSign });
+        return authSig;
     };
 
-    return provider.authenticate({
-        address: ethersSigner.address,
-        signMessage,
-    });
+    ethersSigner.signMessage = await signMessage();
+
+    const authMethod = {
+        authMethodType: 1, 
+        accessToken: JSON.stringify(ethersSigner.signMessage),
+    };
+
+    return authMethod;
 }
 
 async function mintPKP(provider, authMethod) {
